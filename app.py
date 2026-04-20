@@ -62,13 +62,11 @@ def capturer_et_calculer():
 
         NDVI  = float(np.clip((NIR - ROUGE) / (NIR + ROUGE + eps), -1, 1).mean())
         GNDVI = float(np.clip((NIR - VERT)  / (NIR + VERT  + eps), -1, 1).mean())
-        NDWI  = float(np.clip((VERT - NIR)  / (VERT + NIR  + eps), -1, 1).mean())
         VARI  = float(np.clip((VERT - ROUGE) / (VERT + ROUGE - VERT + eps), -1, 1).mean())
 
         etat["derniere_capture"] = {
             "NDVI":      round(NDVI,  3),
             "GNDVI":     round(GNDVI, 3),
-            "NDWI":      round(NDWI,  3),
             "VARI":      round(VARI,  3),
             "timestamp": datetime.now().strftime("%d/%m/%Y at %H:%M"),
         }  # type: ignore[dict-item]
@@ -82,7 +80,6 @@ def capturer_et_calculer():
 def generer_diagnostic(stats, gps):
     """Génère le texte de diagnostic en langage naturel."""
     ndvi = stats["NDVI"]
-    ndwi = stats["NDWI"]
     vari = stats["VARI"]
     lat  = gps["lat"]
     lon  = gps["lon"]
@@ -94,12 +91,7 @@ def generer_diagnostic(stats, gps):
     else:
         etat_veg = "in <strong>critical condition</strong> — very sparse vegetation"
 
-    if ndwi < 0.1:
-        etat_eau = "the soil is <strong style='color:#854F0B'>quite dry</strong> — <strong style='color:#854F0B'>water it a bit</strong>"
-        eau_action = ("alert", "Very low moisture — irrigation recommended within 12-24h.")
-    elif ndwi < 0.25:
-        etat_eau = "moisture is <strong>adequate</strong> but keep monitoring"
-        eau_action = ("warn", "Adequate moisture — irrigation recommended within 48h.")
+   
     else:
         etat_eau = "moisture is <strong>good</strong>"
         eau_action = ("ok", "Good moisture — no irrigation needed.")
@@ -277,11 +269,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       <div class="bar-bg"><div class="bar" id="bar-ndvi" style="width:0%;background:#639922"></div></div>
     </div>
     <div class="metric-card">
-      <div class="metric-label">NDWI — Moisture</div>
-      <div class="metric-value" id="val-ndwi" style="color:#185FA5">—</div>
-      <div class="bar-bg"><div class="bar" id="bar-ndwi" style="width:0%;background:#378ADD"></div></div>
-    </div>
-    <div class="metric-card">
       <div class="metric-label">VARI — Stress</div>
       <div class="metric-value" id="val-vari" style="color:#854F0B">—</div>
       <div class="bar-bg"><div class="bar" id="bar-vari" style="width:0%;background:#EF9F27"></div></div>
@@ -308,11 +295,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         <div class="badge-name">GNDVI</div>
         <div class="badge-val" id="b-gndvi">—</div>
         <div class="badge-status" id="bs-gndvi" style="background:#EAF3DE;color:#27500A">—</div>
-      </div>
-      <div class="badge">
-        <div class="badge-name">NDWI</div>
-        <div class="badge-val" id="b-ndwi">—</div>
-        <div class="badge-status" id="bs-ndwi" style="background:#EAF3DE;color:#27500A">—</div>
       </div>
       <div class="badge">
         <div class="badge-name">VARI</div>
@@ -361,18 +343,15 @@ function badgeConfig(v, ok, warn) {
 function majInterface(data) {
   const s = data.stats;
   document.getElementById('val-ndvi').textContent  = s.NDVI.toFixed(2);
-  document.getElementById('val-ndwi').textContent  = s.NDWI.toFixed(2);
   document.getElementById('val-vari').textContent  = s.VARI.toFixed(2);
   document.getElementById('val-gndvi').textContent = s.GNDVI.toFixed(2);
   document.getElementById('bar-ndvi').style.width  = pct(s.NDVI);
-  document.getElementById('bar-ndwi').style.width  = pct(s.NDWI);
   document.getElementById('bar-vari').style.width  = pct(s.VARI);
   document.getElementById('bar-gndvi').style.width = pct(s.GNDVI);
 
   const badges = [
     ['ndvi',  s.NDVI,  0.5, 0.2],
     ['gndvi', s.GNDVI, 0.4, 0.2],
-    ['ndwi',  s.NDWI,  0.25, 0.1],
     ['vari',  s.VARI,  0.2, 0.0],
   ];
   badges.forEach(([nom, val, ok, warn]) => {
