@@ -90,9 +90,9 @@ def generer_diagnostic(stats, gps):
         etat_veg = "in <strong>average condition</strong> — moderate vegetation"
     else:
         etat_veg = "in <strong>critical condition</strong> — very sparse vegetation"
-      
-     texte = f"Plants in zone <strong>{lat} / {lon}</strong> are {etat_veg} (NDVI {ndvi:.2f})."
-     actions = []
+
+    texte = f"Plants in zone <strong>{lat} / {lon}</strong> are {etat_veg} (NDVI {ndvi:.2f})."
+    actions = []
 
     if ndvi > 0.5:
         actions.append(("ok", "Healthy vegetation — no action needed."))
