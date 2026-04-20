@@ -90,23 +90,16 @@ def generer_diagnostic(stats, gps):
         etat_veg = "in <strong>average condition</strong> — moderate vegetation"
     else:
         etat_veg = "in <strong>critical condition</strong> — very sparse vegetation"
+      
+     texte = f"Plants in zone <strong>{lat} / {lon}</strong> are {etat_veg} (NDVI {ndvi:.2f})."
+     actions = []
 
-   
-    else:
-        etat_eau = "moisture is <strong>good</strong>"
-        eau_action = ("ok", "Good moisture — no irrigation needed.")
-
-    texte = f"Plants in zone <strong>{lat} / {lon}</strong> are {etat_veg} (NDVI {ndvi:.2f}). However, {etat_eau} (NDWI {ndwi:.2f})."
-
-    actions = []
     if ndvi > 0.5:
         actions.append(("ok", "Healthy vegetation — no action needed."))
     elif ndvi > 0.2:
         actions.append(("warn", "Moderate vegetation — monitor closely."))
     else:
         actions.append(("alert", "Critical vegetation — urgent action required."))
-
-    actions.append(eau_action)
 
     if vari < 0:
         actions.append(("alert", "High stress detected — check for disease or pests."))
@@ -408,11 +401,10 @@ function exporter() {
   const s = document.getElementById('val-ndvi').textContent;
   if (s === '—') { alert('Run a capture first.'); return; }
   const ndvi  = document.getElementById('val-ndvi').textContent;
-  const ndwi  = document.getElementById('val-ndwi').textContent;
   const vari  = document.getElementById('val-vari').textContent;
   const gndvi = document.getElementById('val-gndvi').textContent;
   const ts    = document.getElementById('diag-ts').textContent;
-  const txt   = `XARIT — Rapport d'analyse\n${ts}\n\nNDVI  : ${ndvi}\nGNDVI : ${gndvi}\nNDWI  : ${ndwi}\nVARI  : ${vari}\n`;
+  const txt   = `XARIT — Rapport d'analyse\n${ts}\n\nNDVI  : ${ndvi}\nGNDVI : ${gndvi}\nVARI  : ${vari}\n`;
   const blob  = new Blob([txt], { type: 'text/plain' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
