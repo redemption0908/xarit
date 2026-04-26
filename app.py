@@ -15,12 +15,32 @@ app = Flask(__name__)
 # ─────────────────────────────────────────────
 # ÉTAT GLOBAL DE L'APPLICATION
 # ─────────────────────────────────────────────
-
 etat = {
     "derniere_capture": None,
     "gps": {"lat": "14.7167° N", "lon": "17.4677° W"},
     "en_cours": False,
 }
+
+def lire_gps_pixhawk():
+    """Lit le GPS en continu depuis le Pixhawk via MAVLink."""
+    try:
+        from pymavlink import mavutil
+        connection = mavutil.mavlink_connection('/dev/ttyACM0', baud=57600)
+        connection.wait_heartbeat()
+        while True:
+            msg = connection.recv_match(type='GPS_RAW_INT', blocking=True)
+            if msg and msg.fix_type >= 3:
+                lat = msg.lat / 1e7
+                lon = msg.lon / 1e7
+                etat["gps"] = {
+                    "lat": f"{abs(lat):.4f}° {'N' if lat >= 0 else 'S'}",
+                    "lon": f"{abs(lon):.4f}° {'E' if lon >= 0 else 'W'}"
+                }
+    except Exception as e:
+        print(f"GPS non disponible, mode simulation : {e}")
+
+threading.Thread(target=lire_gps_pixhawk, daemon=True).start()
+
 
 # ─────────────────────────────────────────────
 # CAPTURE + CALCUL INDICES
