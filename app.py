@@ -46,26 +46,45 @@ threading.Thread(target=lire_gps_pixhawk, daemon=True).start()
 # CAPTURE + CALCUL INDICES
 # ─────────────────────────────────────────────
 
+import os, base64
+from PIL import Image as PILImage
+import io
+
+os.makedirs("captures", exist_ok=True)
+
 def capturer_et_calculer():
     """
     Sur Raspberry Pi : utilise picamera2.
     Sur Windows/Mac  : génère des valeurs simulées.
     """
     etat["en_cours"] = True
+    image_b64 = None
     try:
         try:
             from picamera2 import Picamera2
             import time
             cam = Picamera2()
             config = cam.create_still_configuration(
-                main={"size": (1640, 1232), "format": "RGB888"},
-                controls={"AwbEnable": False, "AeEnable": True}
+                main={"size": (3280, 2464), "format": "RGB888"},
+                controls={"AwbEnable": False, "AeEnable": True, "ExposureTime": 20000}
             )
             cam.configure(config)
             cam.start()
             time.sleep(2)
             image = cam.capture_array()
             cam.stop()
+
+            # Sauvegarder l'image
+            ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+            filepath = f"captures/xarit_{ts}.jpg"
+            pil_img = PILImage.fromarray(image)
+            pil_img.save(filepath, quality=95)
+
+            # Preview base64 pour le dashboard
+            preview = pil_img.resize((400, 300))
+            buf = io.BytesIO()
+            preview.save(buf, format="JPEG", quality=70)
+            image_b64 = base64.b64encode(buf.getvalue()).decode()
 
             R = image[:, :, 0].astype(np.float32)
             G = image[:, :, 1].astype(np.float32)
@@ -89,7 +108,8 @@ def capturer_et_calculer():
             "GNDVI":     round(GNDVI, 3),
             "VARI":      round(VARI,  3),
             "timestamp": datetime.now().strftime("%d/%m/%Y at %H:%M"),
-        }  # type: ignore[dict-item]
+            "image":     image_b64,
+        }
 
     except Exception as e:
         etat["derniere_capture"] = {"erreur": str(e)}
