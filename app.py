@@ -230,8 +230,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   .btn-export:hover { background: #EAF3DE; }
 
   .content { padding: 16px; display: flex; flex-direction: column; gap: 12px; }
-
-  .map-box { background: #D8E8C0; border-radius: 10px; border: 0.5px solid #8BB060; min-height: 200px; display: flex; align-items: center; justify-content: center; color: #2D5016; font-size: 13px; flex: 1; }
+  .preview-box { background:#EDE8DC; border-radius:10px; border:0.5px solid #C8C0A8; padding:12px; }
+  .preview-header { font-size:11px; color:#7A7260; text-transform:uppercase; letter-spacing:1px; margin-bottom:4px; }
 
   .badges { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
   .badge { background: #EDE8DC; border-radius: 8px; border: 0.5px solid #C8C0A8; padding: 10px; text-align: center; }
@@ -316,7 +316,11 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   </div>
 
   <div class="content">
-    <div class="map-box">GPS Map — Analyzed zone<br>14.72°N · 17.47°W</div>
+  <div class="map-box">GPS Map — Analyzed zone<br>14.72°N · 17.47°W</div>
+  <div class="preview-box" id="preview-box" style="display:none;">
+   <div class="preview-header">Last captured image</div>
+   <img id="preview-img" style="width:100%;border-radius:8px;margin-top:8px;" src="" alt="Last capture"/>
+  </div>
 
     <div class="badges">
       <div class="badge">
@@ -410,7 +414,14 @@ function majInterface(data) {
   document.getElementById('diag-ts').textContent   = `Analyzed on ${s.timestamp}`;
   document.getElementById('diag-fiab').textContent  = `Reliability : ${d.fiabilite}%`;
   document.getElementById('status-ts').textContent  = `Last capture : ${s.timestamp}`;
+  document.getElementById('status-ts').textContent  = `Last capture : ${s.timestamp}`;
+
+  if (s.image) {
+    document.getElementById('preview-img').src = 'data:image/jpeg;base64,' + s.image;
+    document.getElementById('preview-box').style.display = 'block';
+  }
 }
+
 
 async function pollStats() {
   try {
