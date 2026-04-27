@@ -25,7 +25,10 @@ def lire_gps_pixhawk():
     """Lit le GPS en continu depuis le Pixhawk via MAVLink."""
     try:
         from pymavlink import mavutil
-        connection = mavutil.mavlink_connection('/dev/ttyACM0', baud=57600)
+       import sys
+       port = '\\\\.\\COM8' if sys.platform == 'win32' else '/dev/ttyACM0'
+       baud = 38400 if sys.platform == 'win32' else 57600
+       connection = mavutil.mavlink_connection(port, baud=baud)
         connection.wait_heartbeat()
         while True:
             msg = connection.recv_match(type='GPS_RAW_INT', blocking=True)
